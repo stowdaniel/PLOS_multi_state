@@ -1,0 +1,641 @@
+
+
+# Transition matrix
+
+```{r define transition matrix, message = FALSE}
+library(mstate)
+
+# Define transition matrix ------------------------------------------------
+
+# Simple illness death transition matrix
+
+tmat <- transMat(x = list(c(2, 3,  6, 7), 
+                          c(4, 6, 7), 
+                          c(5, 6, 7), 
+                          c(6, 7),
+                          c(6, 7), 
+                          c(),
+                          c()), 
+                 names = c("Healthy", 
+                           "INT", 
+                           "CMD", 
+                           "INT->CMD", 
+                           "CMD->INT",
+                           "CVE",
+                           "Death"))
+
+
+```
+
+# Prepare the data for multi state
+
+
+```{r prepare data for analysis, warning=FALSE}
+# Prepare the data for analysis -------------------------------------------
+
+# Define covariates to keep
+
+covs <- c("gender","ethnicity", "smoking_status","baseline.a","int.a","cmd.a","int.cmd.a","cmd.int.a","cve.a","death.a","IMD","icmm_pgs")
+
+
+
+# prepare the data
+reference_ms_df <- msprep(
+  time = c(
+    NA,
+    "int.t",
+    "cmd.t",
+    "int.cmd.t",
+    "cmd.int.t",
+    "cve.t",
+    "death.t"
+  ),
+  status = c(
+    NA,
+    "int.i",
+    "cmd.i",
+    "int.cmd.i",
+    "cmd.int.i",
+    "cve.i",
+    "death.i"
+  ),
+  data = my_df,
+  trans = tmat,
+  keep = covs
+)
+
+```
+
+# Number of events
+
+```{r number of events}
+
+# Check number of events
+
+# Frequencies
+kableExtra::kable(events(reference_ms_df)$Frequencies) %>%
+  kableExtra::kable_styling()
+
+# Proportions
+kableExtra::kable(round(events(reference_ms_df)$Proportions*100, digits=2))%>%
+  kableExtra::kable_styling()
+
+```
+
+
+
+# Knot fit check
+
+```{r Knot fitting,eval = TRUE}
+
+max_paths<-max(tmat, na.rm=TRUE)
+max_knots <- 5
+n_knots <- rep(NA,max_knots)
+LL <- rep(NA,max_knots)
+AIC <- rep(NA,max_knots)
+BIC <- rep(NA,max_knots)      
+
+knot_df <- lapply(1:max_paths,
+                  function(x) {
+                    for (i in 1:max_knots) {
+                      the_model <- flexsurvspline(
+                        Surv(time = time, event = status)~1,
+                        # inits = c(gamma0 = 1, gamma1 = 0.1,gamma2=0.1),
+                        subset = (trans == x),
+                        data = reference_ms_df,
+                        k = i - 1,
+                        scale = "hazard"
+                      )
+                      
+                      n_knots[i] <- i - 1
+                      LL[i] <- the_model$loglik
+                      AIC[i] <- the_model$AIC
+                      BIC[i] <- the_model$BIC
+                      
+                   }
+                   
+                   
+                   # Make the mod fit data frame
+                   mod_fit <- data.frame(n_knots, 
+                                         LL, 
+                                         AIC, 
+                                         BIC
+                                         )
+                   
+            
+                 })
+           
+
+names(knot_df)<-paste0("transition_",1:max_paths)
+
+
+```
+
+```{r plot out the knot fits, eval = TRUE}
+
+
+lapply(seq_along(knot_df), function(x) {
+  knot_df[[x]] %>% pivot_longer(-n_knots, names_to = "stat", values_to = "value") %>%
+    ggplot(aes(x = n_knots, y = value)) +
+    geom_point() +
+    geom_line() +
+    ggtitle(names(knot_df)[x])+
+    facet_wrap( ~ stat, scales = "free_y")
+  ggsave(paste0(names(knot_df)[[x]],"_plos_r1.png"), width = 10,height=4)
+})
+
+
+```
+Optimum number of knots decided by visual inspection of AIC plots - aiming for lowest AIC OR clear inflection points in the graph
+
+# Knot selection
+
+```{r select number of knots}
+
+t1_knots<-3
+t2_knots<-2
+t3_knots<-4
+t4_knots<-1
+t5_knots<-1
+t6_knots<-2
+t7_knots<-0
+t8_knots<-2
+t9_knots<-2
+t10_knots<-2
+t11_knots<-1
+t12_knots<-0
+t13_knots<-2
+t14_knots<-1
+
+
+```
+
+# Transition 1: Healthy -> INT
+
+```{r transition 1 rcs, eval = TRUE}
+# Best fitting model number of knots
+# t1_knots<-3
+
+
+# Run the best fitting model adjusting for covariates using NPH from the cox models
+
+t1_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+        rcs(baseline.a) + gender + ethnicity  + IMD + smoking_status+icmm_pgs ,
+  anc = list(gamma0 ~ baseline.a+ smoking_status ,
+             gamma1 ~ baseline.a+ smoking_status ,
+             gamma2 ~ baseline.a+ smoking_status ,
+             gamma3 ~ baseline.a+ smoking_status ,
+             gamma4 ~ baseline.a+ smoking_status ),
+  subset = (trans == 1),
+  data = ms_df,
+  k = t1_knots,
+  scale = "hazard"
+)
+# Show the model
+t1_rcs
+t1_rcs%>%tidy(conf.int=TRUE, exponentiate=TRUE)
+# Save the model
+saveRDS(t1_rcs, file = "t1_rcs.rda")
+
+```
+
+
+```{r plot t1 models}
+
+plot(t1_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t1_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t1_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+
+# TRANSITION 2: Healthy -> CMD
+
+
+```{r transition 2 rcs, eval = TRUE}
+# Best fitting model number of knots
+
+
+t2_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~ 
+    rcs(baseline.a) + gender + ethnicity  + IMD + smoking_status +icmm_pgs,
+  anc = list(gamma0 ~ baseline.a+gender+ethnicity,
+             gamma1 ~ baseline.a+gender+ethnicity,
+             gamma2 ~ baseline.a+gender+ethnicity,
+             gamma3 ~ baseline.a+gender+ethnicity),
+  subset = (trans == 2),
+  data = ms_df,
+  k = t2_knots,
+  scale = "hazard"
+)
+
+
+# Save the model
+saveRDS(t2_rcs, file = "t2_rcs.rda")
+```
+
+```{r t2 load model}
+
+plot(t2_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t2_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t2_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+#  Transition 3: Healthy -> CVE
+
+```{r transition 3 rcs, eval = TRUE}
+# Best fitting model number of knots
+
+t3_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+   rcs(baseline.a) + gender + ethnicity +  IMD+ smoking_status+icmm_pgs ,
+  subset = (trans == 3),
+  data = ms_df,
+  k = t3_knots,
+  scale = "hazard"
+)
+
+t3_rcs
+# Save the model
+saveRDS(t3_rcs, file = "t3_rcs.rda")
+
+```
+
+```{r t3 load model}
+# load the model
+
+plot(t3_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t3_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t3_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+# Transition 4: Healthy -> Death
+
+```{r transition 4 rcs, eval  =TRUE}
+
+t4_knots
+# Run the best fitting model
+t4_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~ 
+    baseline.a + gender + ethnicity + IMD+  smoking_status +icmm_pgs,
+  subset = (trans == 4),
+  data = ms_df,
+  k = 0,
+  scale = "hazard"
+)
+
+
+saveRDS(t4_rcs, file = "t4_rcs.rda")
+
+```
+
+```{r t4 load model}
+# load the model
+
+
+plot(t4_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t4_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t4_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+#  Transition 5: INT -> INT.CMD
+
+```{r transition 5 rcs, eval  = TRUE}
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = int.a)
+
+
+# Best fitting model number of knots
+
+t5_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+   rcs(baseline.a) + gender + ethnicity  + IMD +smoking_status+icmm_pgs ,
+  subset = (trans == 5),
+  data = ms_df,
+  k = t5_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t5_rcs, file = "t5_rcs.rda")
+
+```
+
+```{r t5 load model}
+
+plot(t5_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t5_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t5_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+#  Transition 6: INT -> CVE
+
+
+```{r transition 6 rcs, eval= TRUE}
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = int.a)
+
+
+# Best fitting model number of knots
+
+# Run the best fitting model
+
+t6_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+   baseline.a + gender + ethnicity  + IMD +  smoking_status+icmm_pgs ,
+  subset = (trans == 6),
+  data = ms_df,
+  k = t6_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t6_rcs, file = "t6_rcs.rda")
+
+```
+
+```{r t6 load model}
+# load the model
+
+
+plot(t6_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t6_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t6_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+# Transition 7: INT -> Death
+
+```{r transition 7 rcs, eval = TRUE}
+# Best fitting model number of knots
+ms_df<-reference_ms_df%>%mutate(baseline.a = int.a)
+
+
+t7_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+    baseline.a + 
+    gender +
+    ethnicity  +
+    IMD + 
+  
+    smoking_status+icmm_pgs ,
+  subset = (trans == 7),
+  data = ms_df,
+  k = t7_knots,
+  scale = "hazard"
+)
+
+
+# Save the model
+saveRDS(t7_rcs, file = "t7_rcs.rda")
+```
+
+```{r t7 load model}
+# load the model
+
+
+plot(t7_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t7_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t7_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+
+# Transition 8: CMD-> CMD.INT
+
+
+```{r transition 8 rcs, eval = TRUE}
+
+# Best fitting model number of knots
+ms_df<-reference_ms_df%>%mutate(baseline.a = cmd.a)
+
+
+t8_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+  rcs(baseline.a) + gender + ethnicity  + IMD + smoking_status +icmm_pgs,
+  subset = (trans == 8),
+  data = ms_df,
+  k = t8_knots,
+  scale = "hazard"
+)
+
+
+# Save the model
+saveRDS(t8_rcs, file = "t8_rcs.rda")
+
+```
+
+```{r t8 load model}
+# load the model
+
+plot(t8_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t8_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t8_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+
+```
+
+
+# Transition 9: CMD -> CVE
+
+
+```{r transition 9 rcs, eval = TRUE}
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = cmd.a)
+
+# Run the best fitting model
+
+t9_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+    rcs(baseline.a) + gender + ethnicity  + IMD  + smoking_status+icmm_pgs ,
+  subset = (trans == 9),
+  data = ms_df,
+  k = t9_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t9_rcs, file = "t9_rcs.rda")
+
+```
+
+```{r t9 load model}
+# load the model
+
+plot(t9_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t9_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t9_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+# Transition 10: CMD->Death
+
+```{r rcs transition 10 , eval = TRUE}
+# Best fitting model number of knots
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = cmd.a)
+
+
+t10_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+   rcs(baseline.a) + gender + ethnicity  + IMD  + smoking_status +icmm_pgs,
+  subset = (trans == 10),
+  data = ms_df,
+  k = t10_knots,
+  scale = "hazard"
+)
+
+
+# Save the model
+saveRDS(t10_rcs, file = "t10_rcs.rda")
+```
+
+```{r t10 load model}
+# load the model
+
+
+plot(t10_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t10_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t10_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+# Transition 11: INT.CMD ->CVE
+
+```{r rcs transition 11, eval = TRUE}
+# Best fitting model number of knots
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = int.cmd.a)
+
+
+t11_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+    baseline.a + gender + ethnicity  + IMD  + smoking_status +icmm_pgs,
+  subset = (trans == 11),
+  data = ms_df,
+  k = t11_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t11_rcs, file = "t11_rcs.rda")
+```
+
+```{r t11 load model}
+# load the model
+
+
+plot(t11_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t11_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t11_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+# Transition 12: INT.CMD -> Death
+
+
+```{r rcs transition 12, eval = TRUE}
+# Run the best fitting model
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = int.cmd.a)
+
+
+t12_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~ 
+     baseline.a + gender + ethnicity  + IMD  + smoking_status +icmm_pgs,
+  subset = (trans == 12),
+  data = ms_df,
+  k = t12_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t12_rcs, file = "t12_rcs.rda")
+
+```
+
+```{r t12 load model}
+# load the model
+
+plot(t12_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t12_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t12_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+
+# Transition 13: CMD.INT -> CVE
+
+
+```{r rcs transition 13, eval = TRUE}
+# Best fitting model number of knots
+ms_df<-reference_ms_df%>%mutate(baseline.a = cmd.int.a)
+
+
+t13_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+    rcs(baseline.a) + gender + ethnicity  + IMD  + smoking_status +icmm_pgs,
+  subset = (trans == 13),
+  data = ms_df,
+  k = t13_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t13_rcs, file = "t13_rcs.rda")
+
+```
+
+```{r t13 load model}
+# load the model
+
+
+
+plot(t13_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t13_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t13_rcs,type = "survival", ci = FALSE, main = "Survival")
+```
+
+# Transition 14: CMD.INT -> death
+
+```{r transition 14 rcs, eval = TRUE}
+
+# Run the best fitting model
+
+ms_df<-reference_ms_df%>%mutate(baseline.a = cmd.int.a)
+
+
+t14_rcs <- flexsurvspline(
+  Surv(time = time, event = status) ~
+    baseline.a+ 
+    gender+
+    ethnicity+
+    IMD+
+    smoking_status+
+    icmm_pgs ,
+  subset = (trans == 14),
+  data = ms_df,
+  k = t14_knots,
+  scale = "hazard"
+)
+
+# Save the model
+saveRDS(t14_rcs, file = "t14_rcs.rda")
+
+```
+
+```{r t14 load model}
+# load the model
+
+plot(t14_rcs,type = "cumhaz", ci = FALSE, main="Cumulative hazards")
+plot(t14_rcs,type = "hazard", ci = FALSE, main = "Hazards", max.time=10)
+plot(t14_rcs,type = "survival", ci = FALSE, main = "Survival")
+
+```
+
+
