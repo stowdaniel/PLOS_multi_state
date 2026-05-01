@@ -1,0 +1,146 @@
+
+# START -------------------------------------------------------------------
+
+# Code to replicate supplemental figures (CVR and condition ordering)
+
+library(tidyverse)
+rm(list=ls())
+setwd("")
+
+men<-readRDS("final_state_predictions_10_age_bands_LX_MALE.rds")
+women<-readRDS("final_state_predictions_10_age_bands_LX_FEMALE.rds")
+
+ages_results_df_lx<-women
+
+ages_results_df_lx$from_ordered <-
+  factor(
+    ages_results_df_lx$from_ordered,
+    levels = c("CMD -> INT", "INT->CMD", "CMD", "INT", "Otherwise healthy"),
+    labels = c(
+      "CMD->INT",
+      "INT->CMD",
+      "CMD",
+      "INT",
+      "Healthy"
+    )
+  )
+
+table(ages_results_df_lx$from_ordered)
+
+
+mm_plot<-ages_results_df_lx %>%
+  mutate(baseline.a = as.factor(baseline.a)) %>%
+  # filter(baseline.a==20)%>%
+  filter(to == "CVE") %>%
+  filter(from == "INT->CMD" | from == "CMD->INT")%>%
+  filter(t==10)
+# Multimorbid contrast ----------------------------------------------------
+top_limit<-0.75
+
+
+mm_plot<-ages_results_df_lx %>%
+  mutate(baseline.a = as.factor(baseline.a)) %>%
+  # filter(baseline.a==20)%>%
+  filter(to == "CVE") %>%
+  filter(from == "INT->CMD" | from == "CMD->INT") %>%
+  ggplot(
+    aes(
+      x = t2,
+      y = p,
+      ymin = lower,
+      ymax = upper,
+      group=interaction(baseline.a,from_ordered),
+      fill = from_ordered,
+      colour = from_ordered,
+      linetype = from_ordered
+    )
+  ) +geom_line()+
+  geom_ribbon(alpha=0.1)+
+  scale_colour_manual(values = alpha(c("red","blue")))+
+  scale_fill_manual(values = alpha(c("red","blue")))+
+  scale_x_continuous(breaks = scales::pretty_breaks())+
+  scale_y_continuous(limits = c(0,top_limit))+
+  labs(x = "",
+       y = "",
+       colour= "",
+       fill ="",
+       lty = "")+
+  theme_minimal()
+
+mm_plot
+# internalising contrast --------------------------------------------------
+
+int_plot<-ages_results_df_lx %>%
+  mutate(baseline.a = as.factor(baseline.a)) %>%
+  # filter(baseline.a==20)%>%
+  filter(to == "CVE") %>%
+  filter(from == "INT->CMD" | from == "INT" | from =="Healthy") %>%
+  ggplot(
+    aes(
+      x = t2,
+      y = p,
+      ymin = lower,
+      ymax = upper,
+      group=interaction(baseline.a,from_ordered),
+      fill = from_ordered,
+      colour = from_ordered,
+      linetype = from_ordered
+    )
+  ) +geom_line()+
+  geom_ribbon(alpha=0.1)+
+  scale_colour_manual(values = alpha(c("blue","lightblue","green")))+
+  scale_fill_manual(values = alpha(c("blue","lightblue","green")))+
+  scale_y_continuous(limits = c(0,top_limit))+
+  scale_x_continuous(breaks = scales::pretty_breaks())+
+  labs(x = "Age at ICM-MM onset and 10-year follow up",
+      y = "",
+       colour= "",
+       fill ="",
+       lty = "")+
+        theme_minimal()
+
+int_plot
+
+# Cardiometabolic ---------------------------------------------------------
+
+
+
+cmd_plot<-ages_results_df_lx %>%
+  mutate(baseline.a = as.factor(baseline.a)) %>%
+  # filter(baseline.a==20)%>%
+  filter(to == "CVE") %>%
+  filter(from == "CMD->INT" | from == "CMD" |from=="Healthy") %>%
+  ggplot(
+    aes(
+      x = t2,
+      y = p,
+      ymin = lower,
+      ymax = upper,
+      group=interaction(baseline.a,from_ordered),
+      fill = from_ordered,
+      colour = from_ordered,
+      linetype = from_ordered
+    )
+  ) +geom_line()+
+  geom_ribbon(alpha=0.1)+
+  scale_colour_manual(values = alpha(c("red","pink","green")))+
+  scale_fill_manual(values = alpha(c("red","pink","green")))+
+  scale_x_continuous(breaks = scales::pretty_breaks())+
+  scale_y_continuous(limits = c(0,top_limit))+
+  labs(x = "",
+       y = "Probability of CVR (including deaths due to CVR)",
+       colour= "",
+       fill ="",
+       lty = "")+
+        theme_minimal()
+cmd_plot
+library(patchwork)
+# ggpubr::ggarrange(mm_plot,cmd_plot,int_plot, ncol=1)
+mm_plot+cmd_plot+int_plot+plot_layout(ncol=1)
+ggsave("CVE_LX_probs_10_year_bands_FEMALE.png")
+sessionInfo()
+
+
+# END ---------------------------------------------------------------------
+
+
