@@ -1,1 +1,26 @@
-
+PLOS multi-state analysis code
+This repository contains R code accompanying a PLOS Medicine article using multi-state modelling to estimate transition hazards and state occupation probabilities.
+Repository contents
+PLOS_multi_state/
+├── README.md
+├── R/
+│   ├── 00_transition_matrix.R
+│   ├── 01_main_model_fitting.Rmd
+│   ├── 02_predict_state_occupation_probabilities.R
+│   ├── 03_plot_state_occupation_probabilities.R
+│   ├── 04_plot_cvr_contrasts.R
+│   └── functions/
+│       ├── load_fitted_models.R
+│       ├── occurrence_probability_difference.R
+│       └── transition_matrix.R
+├── results/
+│   └── README.md
+├── figures/
+│   └── README.md
+└── renv.lock or session_info.txt
+Suggested workflow
+Run the scripts in the following order:
+R/01_main_model_fitting.Rmd — prepares the multi-state dataset, selects spline complexity, fits transition-specific flexible parametric survival models, and saves fitted model objects.
+R/02_predict_state_occupation_probabilities.R — loads the fitted models and generates predicted 10-year state occupation probabilities by baseline age group.
+R/03_plot_state_occupation_probabilities.R — creates state occupation probability plots corresponding to the main manuscript figures.
+R/04_plot_cvr_contrasts.R — creates contrast plots for cardiovascular/renal event probabilities.
