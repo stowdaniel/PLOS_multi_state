@@ -1,6 +1,10 @@
-PLOS multi-state analysis code
+# PLOS multi-state analysis code
+
 This repository contains R code accompanying a PLOS Medicine article using multi-state modelling to estimate transition hazards and state occupation probabilities.
-Repository contents
+
+## Repository contents
+
+```text
 PLOS_multi_state/
 ├── README.md
 ├── R/
@@ -18,9 +22,93 @@ PLOS_multi_state/
 ├── figures/
 │   └── README.md
 └── renv.lock or session_info.txt
-Suggested workflow
+```
+
+## Suggested workflow
+
 Run the scripts in the following order:
-R/01_main_model_fitting.Rmd — prepares the multi-state dataset, selects spline complexity, fits transition-specific flexible parametric survival models, and saves fitted model objects.
-R/02_predict_state_occupation_probabilities.R — loads the fitted models and generates predicted 10-year state occupation probabilities by baseline age group.
-R/03_plot_state_occupation_probabilities.R — creates state occupation probability plots corresponding to the main manuscript figures.
-R/04_plot_cvr_contrasts.R — creates contrast plots for cardiovascular/renal event probabilities.
+
+1. `R/01_main_model_fitting.Rmd` — prepares the multi-state dataset, selects spline complexity, fits transition-specific flexible parametric survival models, and saves fitted model objects.
+2. `R/02_predict_state_occupation_probabilities.R` — loads the fitted models and generates predicted 10-year state occupation probabilities by baseline age group.
+3. `R/03_plot_state_occupation_probabilities.R` — creates state occupation probability plots corresponding to the main manuscript figures.
+4. `R/04_plot_cvr_contrasts.R` — creates contrast plots for cardiovascular/renal event probabilities.
+
+## Data requirements
+
+The analytic dataset is not included in this repository. To run the code, users need an input data frame with the variables referenced in the scripts, including transition times, event indicators, demographic variables, deprivation index, smoking status, and polygenic score variables.
+
+Expected transition time variables include:
+
+* `int.t`
+* `cmd.t`
+* `int.cmd.t`
+* `cmd.int.t`
+* `cve.t`
+* `death.t`
+
+Expected transition indicator variables include:
+
+* `int.i`
+* `cmd.i`
+* `int.cmd.i`
+* `cmd.int.i`
+* `cve.i`
+* `death.i`
+
+Expected covariates include:
+
+* `gender`
+* `ethnicity`
+* `smoking_status`
+* `baseline.a`
+* `int.a`
+* `cmd.a`
+* `int.cmd.a`
+* `cmd.int.a`
+* `cve.a`
+* `death.a`
+* `IMD`
+* `icmm_pgs`
+
+## Software requirements
+
+The analysis is written in R and uses the following packages:
+
+* `mstate`
+* `flexsurv`
+* `survival`
+* `rms`
+* `tidyverse`
+* `kableExtra`
+* `viridis`
+* `extrafont`
+
+For reproducibility, we recommend adding either:
+
+* an `renv.lock` file created with `renv::snapshot()`, or
+* a `session_info.txt` file created with `sessioninfo::session_info()`.
+
+## Outputs
+
+The code produces fitted model objects, predicted state occupation probabilities, and manuscript figures. Outputs should be written to clearly named folders, for example:
+
+```text
+results/models/
+results/predictions/
+figures/main/
+figures/supplementary/
+```
+
+## Notes on reproducibility
+
+Several scripts currently contain placeholder paths such as `setwd("")` or empty model/result locations. Before release, replace these with project-relative paths, for example using the `here` package:
+
+```r
+here::here("results", "models")
+```
+
+This makes the code easier to run after cloning the repository.
+
+## Citation
+
+Please cite the accompanying PLOS Medicine article when using this code.
