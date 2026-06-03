@@ -162,34 +162,3 @@ figures/supplementary/
 
 Generated model objects and figures may be large and do not necessarily need to be tracked by Git.
 
-## Notes on reproducibility
-
-Some scripts may need local paths updated before running.
-
-For release on GitHub, avoid hard-coded absolute paths or empty placeholders such as:
-
-```r
-setwd("")
-```
-
-or:
-
-```r
-"results_folder_location"
-```
-
-Instead, use project-relative paths. For example:
-
-```r
-here::here("results", "models")
-```
-
-This makes the code easier to run after cloning the repository.
-
-## Citation
-
-Please cite the accompanying PLOS Medicine article when using this code.
-
-## Licence
-
-Add licence information here before release, for example MIT, GPL-3, or another licence appropriate for the project.
