@@ -9,7 +9,7 @@ The code fits transition-specific survival models, predicts 10-year state occupa
 ```text
 PLOS_multi_state/
 ├── README.md
-├── R/
+├── R code/
 │   ├── 01_main_model_fitting.Rmd
 │   ├── 02_predict_state_occupation_probabilities.R
 │   ├── 03_plot_state_occupation_probabilities.R
@@ -19,11 +19,7 @@ PLOS_multi_state/
 │       ├── load_fitted_models.R
 │       ├── occurrence_probability_difference.R
 │       └── transition_matrix.R
-├── results/
-│   └── README.md
-├── figures/
-│   └── README.md
-└── session_info.txt
+
 ```
 
 ## Suggested workflow
