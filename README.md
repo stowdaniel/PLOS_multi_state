@@ -15,6 +15,7 @@ PLOS_multi_state/
 │   ├── 03_plot_state_occupation_probabilities.R
 │   ├── 04_plot_cvr_contrasts.R
 │   └── functions/
+│       ├── make_transition_matrix.R
 │       ├── load_fitted_models.R
 │       ├── occurrence_probability_difference.R
 │       └── transition_matrix.R
