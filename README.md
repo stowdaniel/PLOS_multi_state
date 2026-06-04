@@ -13,6 +13,7 @@ PLOS_multi_state/
 │   ├── 01_main_model_fitting.Rmd
 │   ├── 02_predict_state_occupation_probabilities.R
 │   ├── 03_plot_state_occupation_probabilities.R
+│   ├── 04_plot_state_occupation_contrasts.R
 │   └── functions/
 │       ├── make_transition_matrix.R
 │       ├── load_fitted_models.R
