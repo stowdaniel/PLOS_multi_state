@@ -67,7 +67,7 @@ This script creates contrast plots for cardiovascular/renal event probabilities.
 
 ## Data requirements
 
-The analytic dataset is not included in this repository. Bona fide researchers may apply to access Genes & Health data, which is secured in an ISO27001 compliant Trusted Research Environment.
+The analytic dataset is not included in this repository. Bona fide researchers may [apply to access Genes & Health data](https://www.genesandhealth.org/researchers/apply-for-access/), which is secured in an ISO27001 compliant Trusted Research Environment.
 
 To run the code, users need an input data frame containing the variables referenced in the scripts. This includes transition times, event indicators, demographic variables, deprivation index, smoking status, and a polygenic risk score variable.
 
