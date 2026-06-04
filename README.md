@@ -13,11 +13,10 @@ PLOS_multi_state/
 │   ├── 01_main_model_fitting.Rmd
 │   ├── 02_predict_state_occupation_probabilities.R
 │   ├── 03_plot_state_occupation_probabilities.R
-│   ├── 04_plot_cvr_contrasts.R
 │   └── functions/
 │       ├── make_transition_matrix.R
 │       ├── load_fitted_models.R
-│       ├── occurrence_probability_difference.R
+│       ├── calculate_occupation_probability_contrasts.r
 │       └── transition_matrix.R
 ├── minimal_dataset
 │   ├── 10_year_trajectories_men.csv
@@ -37,7 +36,7 @@ Run the scripts in the following order.
 ### 1. Fit the multi-state models
 
 ```text
-R/01_main_model_fitting.Rmd
+R code/01_main_model_fitting.Rmd
 ```
 
 This script prepares the multi-state analysis dataset, defines transition-specific models, selects spline complexity, fits flexible parametric survival models, and saves fitted model objects.
@@ -45,7 +44,7 @@ This script prepares the multi-state analysis dataset, defines transition-specif
 ### 2. Predict state occupation probabilities
 
 ```text
-R/02_predict_state_occupation_probabilities.R
+R code/02_predict_state_occupation_probabilities.R
 ```
 
 This script loads the fitted transition models and generates predicted 10-year state occupation probabilities by baseline age group.
@@ -53,7 +52,7 @@ This script loads the fitted transition models and generates predicted 10-year s
 ### 3. Plot state occupation probabilities
 
 ```text
-R/03_plot_state_occupation_probabilities.R
+R code/03_plot_state_occupation_probabilities.R
 ```
 
 This script creates the main state occupation probability plots for the manuscript.
@@ -61,13 +60,17 @@ This script creates the main state occupation probability plots for the manuscri
 ### 4. Predict state occupation contrasts
 
 ```text
-R/04_plot_cvr_contrasts.R
+R code/functions/calculate_occupation_probability_contrasts.r
 ```
+This script generates state occupation probability contrasts and associated confidence intervals via bootstrapping. 
+
 
 ### 5. Plot state occupation contrasts
 
-
-This script creates contrast plots for cardiovascular/renal event probabilities.
+```text
+R code/04_plot_state_occupation_contrasts.R
+```
+This script creates plots contrasting state occupation probabilities by different covariate values.
 
 ## Data requirements
 
