@@ -1,8 +1,8 @@
-# PLOS multi-state analysis code
+# LINC multi-state analysis code
 
-This repository contains R code accompanying a PLOS Medicine article using multi-state modelling to estimate transition hazards and state occupation probabilities.
+This repository contains R code to replicate the multi-state modelling analysis reported in doi: https://doi.org/10.1101/2025.10.13.25337676
 
-The code fits transition-specific survival models, predicts 10-year state occupation probabilities, and generates manuscript figures.
+The code fits transition-specific survival models, predicts 10-year state occupation probabilities based on a reference individual, and generates manuscript figures.
 
 ## Repository contents
 
@@ -54,19 +54,22 @@ R/03_plot_state_occupation_probabilities.R
 
 This script creates the main state occupation probability plots for the manuscript.
 
-### 4. Plot cardiovascular/renal contrasts
+### 4. Predict state occupation contrasts
 
 ```text
 R/04_plot_cvr_contrasts.R
 ```
 
+### 5. Plot state occupation contrasts
+
+
 This script creates contrast plots for cardiovascular/renal event probabilities.
 
 ## Data requirements
 
-The analytic dataset is not included in this repository.
+The analytic dataset is not included in this repository. Bona fide researchers may apply to access Genes & Health data, which is secured in an ISO27001 compliant Trusted Research Environment.
 
-To run the code, users need an input data frame containing the variables referenced in the scripts. This includes transition times, event indicators, demographic variables, deprivation index, smoking status, and polygenic score variables.
+To run the code, users need an input data frame containing the variables referenced in the scripts. This includes transition times, event indicators, demographic variables, deprivation index, smoking status, and a polygenic risk score variable.
 
 ### Expected transition time variables
 
@@ -124,30 +127,6 @@ viridis
 extrafont
 ```
 
-For reproducibility, we recommend adding either:
-
-```text
-renv.lock
-```
-
-created using:
-
-```r
-renv::snapshot()
-```
-
-or a session information file:
-
-```text
-session_info.txt
-```
-
-created using:
-
-```r
-sessioninfo::session_info()
-```
-
 ## Outputs
 
 The code produces fitted model objects, predicted state occupation probabilities, and manuscript figures.
@@ -160,6 +139,4 @@ results/predictions/
 figures/main/
 figures/supplementary/
 ```
-
-Generated model objects and figures may be large and do not necessarily need to be tracked by Git.
 
