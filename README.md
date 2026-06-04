@@ -25,7 +25,7 @@ PLOS_multi_state/
 │   ├── contrast_IMD.csv
 │   ├── contrast_ethnicity.csv
 │   ├── contrast_gender.csv
-|   ├── contrast_icmm_pgs.csv
+│   ├── contrast_icmm_pgs.csv
 │   └── contrast_smoking.csv
 
 ```
