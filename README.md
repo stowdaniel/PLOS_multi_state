@@ -19,6 +19,14 @@ PLOS_multi_state/
 │       ├── load_fitted_models.R
 │       ├── occurrence_probability_difference.R
 │       └── transition_matrix.R
+├── minimal_dataset
+│   ├── 10_year_trajectories_men.csv
+│   ├── 10_year_trajectories_women.csv
+│   ├── contrast_IMD.csv
+│   ├── contrast_ethnicity.csv
+│   ├── contrast_gender.csv
+|   ├── contrast_icmm_pgs.csv
+│   └── contrast_smoking.csv
 
 ```
 
@@ -135,4 +143,7 @@ results/predictions/
 figures/main/
 figures/supplementary/
 ```
+## Minimal dataset
+
+The minimal dataset folder contains the data underlying the figures in the main article for reference. 
 
